@@ -1,46 +1,52 @@
 package com.hemebiotech.analytics;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Collections;
 
 public class AnalyticsCounter {
-    private static int headacheCount = 0;
-    private static int rashCount = 0;
-    private static int pupilCount = 0;
 
-    public static void main(String[] args) {
-        String filepath = "C:\\Users\\diatt\\eclipse-workspace\\hemebiotech\\src\\symptoms.txt";
+    private ISymptomReader reader;
+    private ISymptomWriter writer;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(filepath))) {
-            String line = reader.readLine();
+    // Constructeur
+    public AnalyticsCounter(ISymptomReader reader, ISymptomWriter writer) {
+        this.reader = reader;
+        this.writer = writer;
+    }
 
-            // Lecture du fichier ligne par ligne
-            while (line != null) {
-                System.out.println("Symptom from file: " + line);
+    // Méthode principale qui exécute toutes les étapes
+    public void execute() {
+        List<String> symptoms = getSymptoms();
+        Map<String, Integer> counted = countSymptoms(symptoms);
+        Map<String, Integer> sorted = sortSymptoms(counted);
+        writeSymptoms(sorted);
+    }
 
-                if (line.equals("headache")) {
-                    headacheCount++;
-                } else if (line.equals("rash")) { // corrigé
-                    rashCount++;
-                } else if (line.contains("pupils")) {
-                    pupilCount++;
-                }
+    // Récupère les symptômes depuis le fichier
+    public List<String> getSymptoms() {
+        return reader.GetSymptoms();
+    }
 
-                line = reader.readLine(); // lire la ligne suivante
-            }
-        } catch (IOException e) {
-            System.err.println("Erreur de lecture du fichier : " + e.getMessage());
+    // Compte les occurrences de chaque symptôme
+    public Map<String, Integer> countSymptoms(List<String> symptoms) {
+        Map<String, Integer> result = new LinkedHashMap<>();
+        for (String s : symptoms) {
+            result.put(s, result.getOrDefault(s, 0) + 1);
         }
+        return result;
+    }
 
-        // Écriture des résultats dans result.out
-        try (FileWriter writer = new FileWriter("result.out")) {
-            writer.write("headache: " + headacheCount + "\n");
-            writer.write("rash: " + rashCount + "\n");
-            writer.write("dilated pupils: " + pupilCount + "\n");
-        } catch (IOException e) {
-            System.err.println("Erreur d'écriture du fichier : " + e.getMessage());
-        }
+    // Trie les symptômes par ordre alphabétique
+    public Map<String, Integer> sortSymptoms(Map<String, Integer> symptoms) {
+        Map<String, Integer> sorted = new LinkedHashMap<>();
+        symptoms.keySet().stream().sorted().forEach(k -> sorted.put(k, symptoms.get(k)));
+        return sorted;
+    }
+
+    // Écrit le résultat dans le fichier
+    public void writeSymptoms(Map<String, Integer> symptoms) {
+        writer.writeSymptoms(symptoms);
     }
 }
